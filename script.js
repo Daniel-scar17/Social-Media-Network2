@@ -1,184 +1,289 @@
-const socialData = {
-    Daniel: ["Facebook", "TikTok", "Instagram", "X"],
-    Kelly: ["Facebook", "TikTok"],
-    April: ["X", "Instagram"],
-    Craig: ["TikTok"],
-    Viel: []
-};
+let socialData = {};
 
 let selectedPerson = null;
 
-const cy = cytoscape({
-    container: document.getElementById("cy"),
-    elements: [],
+const dataColors = {
+    Facebook:"#3498db",
+    Instagram:"#e84393",
+    TikTok:"#2d3436",
+    Discord:"#6c5ce7",
+    Twitter:"#00acee",
+    YouTube:"#e74c3c"
+};
 
-    style: [
+const cy = cytoscape({
+
+    container:document.getElementById("cy"),
+
+    elements:[],
+
+    style:[
+
         {
-            selector: "node",
-            style: {
-                "background-color": "#4a90e2",
-                "label": "data(label)",
-                "text-valign": "center",
-                "text-halign": "center",
-                "color": "#222",
-                "width": 70,
-                "height": 70
+            selector:"node",
+            style:{
+                "background-color":"#4a90e2",
+                "label":"data(label)",
+                "color":"white",
+                "text-valign":"center",
+                "text-halign":"center",
+                "font-size":"14px",
+                "width":60,
+                "height":60
             }
         },
+
         {
-            selector: "node.selected",
-            style: {
-                "background-color": "#2ecc71",
-                "border-width": 4,
-                "border-color": "#27ae60"
-            }
-        },
-        {
-            selector: "edge",
-            style: {
-                "width": 5,
-                "curve-style": "bezier",
-                "line-color": "data(color)",
-                "label": "data(platform)",
-                "font-size": 12,
-                "text-background-color": "#fff",
-                "text-background-opacity": 1,
-                "text-background-padding": 3
+            selector:"edge",
+            style:{
+                "curve-style":"bezier",
+                "width":5,
+                "line-color":"data(color)",
+                "label":"data(label)",
+                "font-size":"10px",
+                "text-background-color":"white",
+                "text-background-opacity":1,
+                "text-background-padding":"2px"
             }
         }
+
     ]
+
 });
 
 function makeId(name){
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+
+    return name
+        .toLowerCase()
+        .replace(/\s+/g,"_");
 }
 
-function getPlatformColor(platform){
-    if(platform === "Facebook"){
-        return "#1877F2";
-    }
+function addConnectedPerson(){
 
-    if(platform === "Instagram"){
-        return "#8e44ad";
-    }
+    const mainPerson =
+        document.getElementById("mainPerson")
+        .value
+        .trim();
 
-    if(platform === "TikTok"){
-        return "#000000";
-    }
+    const connectedPerson =
+        document.getElementById("connectedPerson")
+        .value
+        .trim();
 
-    if(platform === "X"){
-        return "#777777";
-    }
+    if(!mainPerson || !connectedPerson){
 
-    return "#999999";
-}
-
-function selectPerson(person){
-    selectedPerson = person;
-
-    document.getElementById("details").innerHTML = `
-        <h3>${person}</h3>
-        <p>Selected person: <b>${person}</b></p>
-        <p>Click <b>Find Connection</b> to view connections.</p>
-    `;
-}
-
-function findConnection(){
-    if(!selectedPerson){
-        alert("Select a person first.");
+        alert("Enter Main Person and Connected Person");
         return;
     }
+
+    if(!socialData[mainPerson]){
+
+        socialData[mainPerson] = {
+            data:[]
+        };
+    }
+
+    if(!socialData[connectedPerson]){
+
+        socialData[connectedPerson] = {
+            data:[]
+        };
+    }
+
+    loadPeople();
+
+    document.getElementById("connectedPerson").value = "";
+
+    buildGraph();
+}
+
+function loadPeople(){
+
+    const container =
+        document.getElementById("peopleList");
+
+    container.innerHTML = "";
+
+    Object.keys(socialData).forEach(person => {
+
+        const div = document.createElement("div");
+
+        div.className = "person-card";
+
+        if(person === selectedPerson){
+            div.classList.add("selected");
+        }
+
+        div.innerHTML = person;
+
+        div.onclick = () => {
+
+            selectedPerson = person;
+
+            loadPeople();
+
+            showPersonData(person);
+        };
+
+        container.appendChild(div);
+    });
+}
+
+function showPersonData(person){
+
+    document.getElementById(
+        "selectedPersonTitle"
+    ).innerHTML = person;
+
+    const container =
+        document.getElementById("personData");
+
+    container.innerHTML = "";
+
+    const dataList =
+        socialData[person].data;
+
+    if(dataList.length === 0){
+
+        container.innerHTML =
+            "<p>No data yet.</p>";
+
+        return;
+    }
+
+    dataList.forEach(item => {
+
+        const tag =
+            document.createElement("div");
+
+        tag.className = "data-tag";
+
+        tag.innerHTML = item;
+
+        container.appendChild(tag);
+    });
+}
+
+function addDataToSelectedPerson(){
+
+    if(!selectedPerson){
+
+        alert("Select a person first");
+        return;
+    }
+
+    const data =
+        document.getElementById("dataInput")
+        .value
+        .trim();
+
+    if(!data){
+
+        alert("Enter data/platform");
+        return;
+    }
+
+    if(
+        !socialData[selectedPerson]
+        .data.includes(data)
+    ){
+        socialData[selectedPerson]
+        .data.push(data);
+    }
+
+    document.getElementById("dataInput")
+    .value = "";
+
+    showPersonData(selectedPerson);
+
+    buildGraph();
+}
+
+function buildGraph(){
 
     cy.elements().remove();
 
     const nodes = [];
     const edges = [];
-    const people = Object.keys(socialData);
+
+    const people =
+        Object.keys(socialData);
 
     people.forEach(person => {
+
         nodes.push({
-            data: {
-                id: makeId(person),
-                label: person
-            },
-            classes: person === selectedPerson ? "selected" : ""
-        });
-    });
 
-    people.forEach(person => {
-        if(person === selectedPerson){
-            return;
-        }
-
-        const sharedPlatforms = socialData[selectedPerson].filter(platform =>
-            socialData[person].includes(platform)
-        );
-
-        sharedPlatforms.forEach(platform => {
-            edges.push({
-                data: {
-                    id: makeId(selectedPerson) + "_" + makeId(person) + "_" + platform,
-                    source: makeId(selectedPerson),
-                    target: makeId(person),
-                    platform: platform,
-                    color: getPlatformColor(platform)
-                }
-            });
-        });
-    });
-
-    cy.add([...nodes, ...edges]);
-
-    cy.layout({
-        name: "cose",
-        animate: true,
-        padding: 50
-    }).run();
-
-    showDetails();
-}
-
-function showDetails(){
-    let html = `
-        <h3>${selectedPerson}</h3>
-        <b>Platforms:</b>
-        <ul>
-            ${
-                socialData[selectedPerson].length > 0
-                ? socialData[selectedPerson].map(platform => `<li>${platform}</li>`).join("")
-                : "<li>No social media platform</li>"
+            data:{
+                id:makeId(person),
+                label:person
             }
-        </ul>
-        <hr>
-        <b>Connections:</b>
-    `;
 
-    let hasConnection = false;
+        });
 
-    Object.keys(socialData).forEach(person => {
-        if(person === selectedPerson){
-            return;
-        }
-
-        const sharedPlatforms = socialData[selectedPerson].filter(platform =>
-            socialData[person].includes(platform)
-        );
-
-        if(sharedPlatforms.length > 0){
-            hasConnection = true;
-
-            html += `
-                <p>
-                    <b>${person}</b><br>
-                    Same platform: ${sharedPlatforms.join(", ")}
-                </p>
-            `;
-        }
     });
 
-    if(!hasConnection){
-        html += `<p>No connection found. This person is isolated.</p>`;
+    for(let i = 0; i < people.length; i++){
+
+        for(let j = i + 1; j < people.length; j++){
+
+            const personA = people[i];
+            const personB = people[j];
+
+            const dataA =
+                socialData[personA].data;
+
+            const dataB =
+                socialData[personB].data;
+
+            const sharedData =
+                dataA.filter(item =>
+                    dataB.includes(item)
+                );
+
+            if(sharedData.length > 0){
+
+                sharedData.forEach(shared => {
+
+                    edges.push({
+
+                        data:{
+                            id:
+                                makeId(personA)
+                                + "_"
+                                + makeId(personB)
+                                + "_"
+                                + shared,
+
+                            source:makeId(personA),
+
+                            target:makeId(personB),
+
+                            label:shared,
+
+                            color:
+                                dataColors[shared]
+                                || "#777"
+                        }
+
+                    });
+
+                });
+
+            }
+
+        }
+
     }
 
-    document.getElementById("details").innerHTML = html;
+    cy.add([...nodes,...edges]);
+
+    cy.layout({
+
+        name:"cose",
+        animate:true,
+        padding:40
+
+    }).run();
 }
+
+buildGraph();
