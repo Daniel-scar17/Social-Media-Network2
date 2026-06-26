@@ -3,67 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Media Network</title>
-
+    <title>Social Network Graph</title>
     <link rel="stylesheet" href="style.css">
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
 </head>
 <body>
 
-<h1>My Social Media Network</h1>
+    <h1>Social Media Network</h1>
 
-<div class="top-controls">
-
-    <input type="text" id="mainPerson" placeholder="Main Person">
-
-    <input type="text" id="connectedPerson" placeholder="Connected Person">
-
-    <button onclick="addConnectedPerson()">
-        Add Connected Person
-    </button>
-
-</div>
-
-<div class="main-layout">
-
-    <div class="left-panel">
-
-        <h2>Connected People</h2>
-
-        <div id="peopleList"></div>
-
+    <div class="person-buttons">
+        <button onclick="selectPerson('Daniel')">Daniel</button>
+        <button onclick="selectPerson('Kelly')">Kelly</button>
+        <button onclick="selectPerson('April')">April</button>
+        <button onclick="selectPerson('Craig')">Craig</button>
+        <button onclick="selectPerson('Viel')">Viel</button>
     </div>
 
-    <div class="center-panel">
+    <div class="controls">
+        <button onclick="findConnection()">Find Connection</button>
+    </div>
 
+    <div class="main">
         <div id="cy"></div>
-
+        <div id="details">Select a person, then click Find Connection.</div>
     </div>
 
-    <div class="right-panel">
-
-        <h2 id="selectedPersonTitle">
-            Select a Person
-        </h2>
-
-        <input
-            type="text"
-            id="dataInput"
-            placeholder="Enter Data / Platform"
-        >
-
-        <button onclick="addDataToSelectedPerson()">
-            Add Data
-        </button>
-
-        <div id="personData"></div>
-
-    </div>
-
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 
 </body>
 </html>
