@@ -16,7 +16,7 @@ const cy = cytoscape({
         {
             selector: "node",
             style: {
-                "background-color": "#4a90e2",
+                "background-color": "data(color)",
                 "label": "data(label)",
                 "text-valign": "center",
                 "text-halign": "center",
@@ -53,6 +53,18 @@ function makeId(name){
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
 }
 
+function getNodeColor(person){
+    const colors = {
+        Daniel: "#e74c3c",
+        Kelly: "#3498db",
+        April: "#f1c40f",
+        Craig: "#9b59b6",
+        Viel: "#95a5a6"
+    };
+
+    return colors[person] || "#4a90e2";
+}
+
 function getPlatformColor(platform){
     if(platform === "Facebook"){
         return "#1877F2";
@@ -75,6 +87,12 @@ function getPlatformColor(platform){
 
 function selectPerson(person){
     selectedPerson = person;
+
+    document.querySelectorAll(".person-buttons button").forEach(button => {
+        button.classList.remove("active");
+    });
+
+    event.target.classList.add("active");
 
     document.getElementById("details").innerHTML = `
         <h3>${person}</h3>
@@ -99,7 +117,8 @@ function findConnection(){
         nodes.push({
             data: {
                 id: makeId(person),
-                label: person
+                label: person,
+                color: getNodeColor(person)
             },
             classes: person === selectedPerson ? "selected" : ""
         });
@@ -149,7 +168,9 @@ function showDetails(){
                 : "<li>No social media platform</li>"
             }
         </ul>
+
         <hr>
+
         <b>Connections:</b>
     `;
 
@@ -179,6 +200,25 @@ function showDetails(){
     if(!hasConnection){
         html += `<p>No connection found. This person is isolated.</p>`;
     }
+
+    html += `
+        <hr>
+        <b>Line Colors:</b>
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-line facebook"></span> Facebook
+            </div>
+            <div class="legend-item">
+                <span class="legend-line instagram"></span> Instagram
+            </div>
+            <div class="legend-item">
+                <span class="legend-line tiktok"></span> TikTok
+            </div>
+            <div class="legend-item">
+                <span class="legend-line x"></span> X
+            </div>
+        </div>
+    `;
 
     document.getElementById("details").innerHTML = html;
 }
