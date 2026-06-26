@@ -11,12 +11,14 @@
 
 <h1>My Social Media Network</h1>
 
-<div class="search-container">
-    <div class="search-box">
-        <input id="searchName" placeholder="Search name">
-        <button id="clearSearch" onclick="clearSearchText()">✕</button>
-    </div>
-    <button onclick="searchPerson()">Search</button>
+<div class="controls">
+    <input id="mainPerson" placeholder="Main Person">
+
+    <textarea id="connectedPeople" placeholder="Connected People, separate names with comma"></textarea>
+
+    <button onclick="showGroupGraph()">Show Graph</button>
+    <button class="reset" onclick="resetData()">Reset Data</button>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
 </div>
 
 <div class="controls">
