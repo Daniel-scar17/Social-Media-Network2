@@ -20,12 +20,22 @@
 </div>
 
 <div class="controls">
-    <input id="mainPerson" placeholder="Person">
-    <input id="connectedPerson" placeholder="Data / Platform">
+    <input id="mainPerson" placeholder="Main Person">
 
-    <button onclick="addPersonData()">Add Data</button>
+    <textarea id="connectedPeople" placeholder="Connected People, separate names with comma"></textarea>
+
+    <button onclick="setPeopleGroup()">Set People</button>
     <button class="reset" onclick="resetData()">Reset Data</button>
     <button class="menu-btn" onclick="toggleMenu()">☰</button>
+</div>
+
+<div id="dataPanel" class="data-panel">
+    <h3 id="selectedPersonTitle">Select a person to add data</h3>
+
+    <input id="dataInput" placeholder="Add platform/data, example: Facebook">
+    <button onclick="addDataToSelectedPerson()">Add Data</button>
+
+    <div id="personDataList"></div>
 </div>
 
 <div id="sideMenu" class="side-menu">
