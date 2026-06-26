@@ -1,105 +1,32 @@
 export const defaultSocialData = {
-    "Regine": {
-        "Facebook": ["April", "Craig", "Cresa", "Elmie", "Jenelyn", "Josefl", "Kelly Grace", "Kyrl", "Nylvia", "Phoeboy", "Row", "Steven", "Viel Son"]
+    "Daniel":{
+        platforms:["Facebook","TikTok"]
     },
-    "April": {
-        "Facebook": ["Regine", "Ariane", "Craig", "Daniel", "Kelly"],
-        "Instagram": ["Ariane", "Daniel"],
-        "TikTok": ["Kelly"]
+    "Kelly":{
+        platforms:["Facebook"]
     },
-    "Daniel": {
-        "Facebook": ["April", "Nylvia"],
-        "Instagram": ["April"],
-        "TikTok": ["Kelly", "Viel"]
+    "April":{
+        platforms:["Facebook","Instagram"]
     },
-    "Ariane": {
-        "Facebook": ["April"],
-        "Instagram": ["Daniel"]
+    "Viel":{
+        platforms:[]
     },
-    "Craig": {
-        "Facebook": ["April", "Regine"]
+    "Arianne":{
+        platforms:["Instagram","TikTok"]
     },
-    "Kelly": {
-        "Facebook": ["April", "Nylvia"],
-        "TikTok": ["Daniel"]
+    "Craig":{
+        platforms:["Facebook","X"]
     },
-    "Viel": {
-        "Facebook": ["Mark"],
-        "TikTok": ["Daniel", "Vince"]
+    "Regine":{
+        platforms:["Facebook"]
     },
-    "Adrian": {
-        "Facebook": ["Dunavan", "Juhan", "Bin"]
+    "Nylvia":{
+        platforms:["Facebook","TikTok"]
     },
-    "Althea": {
-        "Facebook": ["Nylvia"]
+    "Phoeboy":{
+        platforms:["X"]
     },
-    "Bin": {
-        "Facebook": ["Adrian", "James", "Johan", "Mark James"]
-    },
-    "Cresa": {
-        "Facebook": ["Regine", "Ivan"]
-    },
-    "Dunavan": {
-        "Facebook": ["Adrian"]
-    },
-    "Elmie": {
-        "Facebook": ["Regine"]
-    },
-    "Gian": {
-        "Facebook": ["Josefl"]
-    },
-    "Ivan": {
-        "Facebook": ["Cresa"]
-    },
-    "James": {
-        "Facebook": ["Bin"]
-    },
-    "Jenelyn": {
-        "Facebook": ["Regine", "Joshua"]
-    },
-    "Josefl": {
-        "Facebook": ["Regine", "Gian", "Mark"]
-    },
-    "Johan": {
-        "Facebook": ["Bin"]
-    },
-    "Joshua": {
-        "Facebook": ["Jenelyn"]
-    },
-    "Juhan": {
-        "Facebook": ["Adrian"]
-    },
-    "Kelly Grace": {
-        "Facebook": ["Regine"]
-    },
-    "Kyrl": {
-        "Facebook": ["Regine"]
-    },
-    "Mark James": {
-        "Facebook": ["Bin"]
-    },
-    "Mark": {
-        "Facebook": ["Josefl", "Viel"]
-    },
-    "Nylvia": {
-        "Facebook": ["Regine", "Daniel", "Kelly", "Althea"]
-    },
-    "Phoeboy": {
-        "Facebook": ["Regine"]
-    },
-    "Row": {
-        "Facebook": ["Regine"]
-    },
-    "Steven": {
-        "Facebook": ["Regine"]
-    },
-    "Viel Son": {
-        "Facebook": ["Regine"]
-    },
-    "Vince": {
-        "Facebook": ["Viel"]
-    },
-    "Zeeshan": {
-        "Facebook": []
+    "Steven":{
+        platforms:["Facebook"]
     }
 };
