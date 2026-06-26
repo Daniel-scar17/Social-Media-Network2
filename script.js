@@ -11,6 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 let socialData = {};
+let currentGroup = [];
+let selectedPerson = null;
 let selectedNodeId = null;
 
 const cy = cytoscape({
@@ -35,7 +37,12 @@ const cy = cytoscape({
             style:{
                 "width":5,
                 "curve-style":"bezier",
-                "line-color":"#777"
+                "line-color":"data(edgeColor)",
+                "label":"data(sharedLabel)",
+                "font-size":12,
+                "text-background-color":"#fff",
+                "text-background-opacity":1,
+                "text-background-padding":3
             }
         },
         {
@@ -49,7 +56,8 @@ const cy = cytoscape({
     ]
 });
 
-window.addPersonData = addPersonData;
+window.setPeopleGroup = setPeopleGroup;
+window.addDataToSelectedPerson = addDataToSelectedPerson;
 window.searchPerson = searchPerson;
 window.resetData = resetData;
 window.toggleMenu = toggleMenu;
@@ -64,7 +72,14 @@ function makeId(name){
         .replace(/[^a-z0-9]+/g,"_");
 }
 
-function normalizePersonName(name){
+function normalizeName(name){
+    return name
+        .trim()
+        .replace(/\s+/g," ")
+        .replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function normalizeDataName(name){
     return name
         .trim()
         .replace(/\s+/g," ")
@@ -83,6 +98,25 @@ function findPersonKey(name){
     return null;
 }
 
+function getPlatformColor(platform){
+    const colors = {
+        Facebook:"#1877F2",
+        Instagram:"#C13584",
+        Tiktok:"#000000",
+        TikTok:"#000000",
+        X:"#777777"
+    };
+
+    return colors[platform] || "#8e44ad";
+}
+
+function getSharedPlatforms(personA, personB){
+    const dataA = socialData[personA]?.platforms || [];
+    const dataB = socialData[personB]?.platforms || [];
+
+    return dataA.filter(item => dataB.includes(item));
+}
+
 async function loadDatabase(){
     const snapshot = await getDocs(collection(db,"people"));
 
@@ -93,14 +127,18 @@ async function loadDatabase(){
         socialData = {};
 
         snapshot.forEach(document => {
-            socialData[document.id] = document.data();
+            const data = document.data();
+
+            socialData[document.id] = {
+                platforms:Array.isArray(data.platforms) ? data.platforms : []
+            };
         });
     }
 
     loadSocialFolders();
 
     document.getElementById("details").innerHTML =
-        "Search a person or open a saved social folder.";
+        "Enter a main person and connected people, then add data/platforms to each person.";
 }
 
 async function uploadDefaultData(){
@@ -113,53 +151,134 @@ async function savePerson(person){
     await setDoc(doc(db,"people",person), socialData[person]);
 }
 
-async function addPersonData(){
-    const person = normalizePersonName(
+async function setPeopleGroup(){
+    const mainPersonInput = normalizeName(
         document.getElementById("mainPerson").value
     );
 
-    const dataName = normalizePersonName(
-        document.getElementById("connectedPerson").value
-    );
+    const connectedInput = document.getElementById("connectedPeople").value;
 
-    if(!person || !dataName){
-        alert("Enter person and data/platform.");
+    if(!mainPersonInput){
+        alert("Enter the main person.");
         return;
     }
 
-    const realPerson = findPersonKey(person) || person;
+    const mainPerson = findPersonKey(mainPersonInput) || mainPersonInput;
 
-    if(!socialData[realPerson]){
-        socialData[realPerson] = {
-            data:[]
+    const connectedPeople = connectedInput
+        .split(/,|\n/)
+        .map(name => normalizeName(name))
+        .filter(name => name.length > 0)
+        .map(name => findPersonKey(name) || name);
+
+    currentGroup = [
+        mainPerson,
+        ...connectedPeople.filter(name => name !== mainPerson)
+    ];
+
+    currentGroup = [...new Set(currentGroup)];
+
+    for(let person of currentGroup){
+        if(!socialData[person]){
+            socialData[person] = {
+                platforms:[]
+            };
+        }
+
+        if(!Array.isArray(socialData[person].platforms)){
+            socialData[person].platforms = [];
+        }
+
+        await savePerson(person);
+    }
+
+    selectedPerson = mainPerson;
+
+    loadSocialFolders();
+    renderPeopleSelector();
+    buildCurrentGroupGraph();
+    showDetails(mainPerson);
+}
+
+function renderPeopleSelector(){
+    const container = document.getElementById("personDataList");
+
+    let html = "";
+
+    currentGroup.forEach(person => {
+        const activeClass = person === selectedPerson ? "active" : "";
+
+        html += `
+            <span class="person-chip ${activeClass}" onclick="selectPersonForData('${person}')">
+                ${person}
+            </span>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    if(selectedPerson){
+        updateSelectedPersonPanel();
+    }
+}
+
+window.selectPersonForData = function(person){
+    selectedPerson = person;
+    renderPeopleSelector();
+    showDetails(person);
+};
+
+function updateSelectedPersonPanel(){
+    document.getElementById("selectedPersonTitle").innerHTML =
+        "Add Data / Platform to " + selectedPerson;
+}
+
+async function addDataToSelectedPerson(){
+    const dataName = normalizeDataName(
+        document.getElementById("dataInput").value
+    );
+
+    if(!selectedPerson){
+        alert("Select a person first.");
+        return;
+    }
+
+    if(!dataName){
+        alert("Enter data/platform.");
+        return;
+    }
+
+    if(!socialData[selectedPerson]){
+        socialData[selectedPerson] = {
+            platforms:[]
         };
     }
 
-    if(!socialData[realPerson].data){
-        socialData[realPerson].data = [];
+    if(!Array.isArray(socialData[selectedPerson].platforms)){
+        socialData[selectedPerson].platforms = [];
     }
 
-    if(!socialData[realPerson].data.includes(dataName)){
-        socialData[realPerson].data.push(dataName);
+    if(!socialData[selectedPerson].platforms.includes(dataName)){
+        socialData[selectedPerson].platforms.push(dataName);
     }
 
-    await savePerson(realPerson);
+    await savePerson(selectedPerson);
 
-    buildGraphFromSharedData();
+    document.getElementById("dataInput").value = "";
+
     loadSocialFolders();
-
-    document.getElementById("mainPerson").value = "";
-    document.getElementById("connectedPerson").value = "";
+    renderPeopleSelector();
+    buildCurrentGroupGraph();
+    showDetails(selectedPerson);
 }
 
-function buildGraphFromSharedData(){
+function buildCurrentGroupGraph(){
     cy.elements().remove();
 
-    const people = Object.keys(socialData);
     const nodes = [];
     const edges = [];
 
-    people.forEach(person => {
+    currentGroup.forEach(person => {
         nodes.push({
             data:{
                 id:makeId(person),
@@ -168,25 +287,27 @@ function buildGraphFromSharedData(){
         });
     });
 
-    for(let i = 0; i < people.length; i++){
-        for(let j = i + 1; j < people.length; j++){
-            const personA = people[i];
-            const personB = people[j];
+    for(let i = 0; i < currentGroup.length; i++){
+        for(let j = i + 1; j < currentGroup.length; j++){
+            const personA = currentGroup[i];
+            const personB = currentGroup[j];
 
-            const dataA = socialData[personA].data || [];
-            const dataB = socialData[personB].data || [];
+            const sharedPlatforms = getSharedPlatforms(personA, personB);
 
-            const sharedData = dataA.filter(item =>
-                dataB.includes(item)
-            );
+            if(sharedPlatforms.length > 0){
+                const edgeColor =
+                    sharedPlatforms.length === 1
+                    ? getPlatformColor(sharedPlatforms[0])
+                    : "#8e44ad";
 
-            if(sharedData.length > 0){
                 edges.push({
                     data:{
                         id:makeId(personA) + "_" + makeId(personB),
                         source:makeId(personA),
                         target:makeId(personB),
-                        shared:sharedData.join(", ")
+                        shared:sharedPlatforms,
+                        sharedLabel:sharedPlatforms.join(", "),
+                        edgeColor:edgeColor
                     }
                 });
             }
@@ -204,7 +325,7 @@ function buildGraphFromSharedData(){
     }).run();
 
     document.getElementById("details").innerHTML =
-        "Graph generated based on shared data/platforms.";
+        "Graph generated. Edges appear only when people share the same data/platform.";
 }
 
 function buildSinglePersonGraph(person){
@@ -216,57 +337,25 @@ function buildSinglePersonGraph(person){
         return;
     }
 
-    const nodes = new Map();
-    const edges = [];
-    const personData = socialData[person].data || [];
-
-    nodes.set(makeId(person), {
-        data:{
-            id:makeId(person),
-            label:person
-        }
-    });
+    const group = [person];
 
     for(let otherPerson in socialData){
         if(otherPerson === person){
             continue;
         }
 
-        const otherData = socialData[otherPerson].data || [];
+        const shared = getSharedPlatforms(person, otherPerson);
 
-        const sharedData = personData.filter(item =>
-            otherData.includes(item)
-        );
-
-        if(sharedData.length > 0){
-            nodes.set(makeId(otherPerson), {
-                data:{
-                    id:makeId(otherPerson),
-                    label:otherPerson
-                }
-            });
-
-            edges.push({
-                data:{
-                    id:makeId(person) + "_" + makeId(otherPerson),
-                    source:makeId(person),
-                    target:makeId(otherPerson),
-                    shared:sharedData.join(", ")
-                }
-            });
+        if(shared.length > 0){
+            group.push(otherPerson);
         }
     }
 
-    cy.add([...nodes.values(), ...edges]);
+    currentGroup = [...new Set(group)];
+    selectedPerson = person;
 
-    applyVertexColoring();
-
-    cy.layout({
-        name:"cose",
-        animate:true,
-        padding:50
-    }).run();
-
+    renderPeopleSelector();
+    buildCurrentGroupGraph();
     showDetails(person);
 }
 
@@ -307,47 +396,53 @@ function showDetails(person){
         return;
     }
 
-    const dataList = personData.data || [];
+    const platforms = personData.platforms || [];
 
     let html = `
         <h3>${person}</h3>
         <b>Saved Data / Platforms:</b>
-        <ul>
-            ${dataList.map(item => `<li>${item}</li>`).join("")}
-        </ul>
-        <hr>
-        <b>Connected To:</b>
     `;
 
-    const connectedPeople = [];
+    if(platforms.length === 0){
+        html += `<p>No saved platforms/data.</p>`;
+    }else{
+        html += `
+            <div>
+                ${platforms.map(item => `<span class="data-chip">${item}</span>`).join("")}
+            </div>
+        `;
+    }
 
-    for(let otherPerson in socialData){
+    html += `
+        <hr>
+        <b>Connections in Current Graph:</b>
+    `;
+
+    const connections = [];
+
+    currentGroup.forEach(otherPerson => {
         if(otherPerson === person){
-            continue;
+            return;
         }
 
-        const otherData = socialData[otherPerson].data || [];
-
-        const shared = dataList.filter(item =>
-            otherData.includes(item)
-        );
+        const shared = getSharedPlatforms(person, otherPerson);
 
         if(shared.length > 0){
-            connectedPeople.push({
+            connections.push({
                 name:otherPerson,
                 shared:shared
             });
         }
-    }
+    });
 
-    if(connectedPeople.length === 0){
-        html += `<p>No matching data with other people.</p>`;
+    if(connections.length === 0){
+        html += `<p>This person is isolated in the current graph.</p>`;
     }else{
-        connectedPeople.forEach(connection => {
+        connections.forEach(connection => {
             html += `
                 <p>
                     <b>${connection.name}</b><br>
-                    Same data: ${connection.shared.join(", ")}
+                    Same data/platform: ${connection.shared.join(", ")}
                 </p>
             `;
         });
@@ -357,7 +452,7 @@ function showDetails(person){
 }
 
 function searchPerson(){
-    const searchValue = normalizePersonName(
+    const searchValue = normalizeName(
         document.getElementById("searchName").value
     );
 
@@ -398,8 +493,20 @@ cy.on("tap","node",function(evt){
         node.addClass("highlighted");
         node.neighborhood("node").addClass("highlighted");
 
+        selectedPerson = name;
+        renderPeopleSelector();
         showDetails(name);
     }
+});
+
+cy.on("tap","edge",function(evt){
+    const edge = evt.target;
+
+    document.getElementById("details").innerHTML = `
+        <h3>${edge.source().data("label")} ↔ ${edge.target().data("label")}</h3>
+        <b>Shared Data / Platforms:</b>
+        <p>${edge.data("sharedLabel")}</p>
+    `;
 });
 
 cy.on("tap",function(evt){
@@ -443,7 +550,7 @@ function loadSocialFolders(){
 
         const item = document.createElement("div");
         item.className = "folder folder-name";
-        item.innerHTML = "📁 " + person + "'s Socials";
+        item.innerHTML = "📁 " + person + "'s Data";
 
         item.onclick = function(){
             buildSinglePersonGraph(person);
@@ -477,8 +584,11 @@ async function deletePerson(person){
 
     await deleteDoc(doc(db,"people",person));
 
+    currentGroup = currentGroup.filter(name => name !== person);
+
     loadSocialFolders();
-    cy.elements().remove();
+    renderPeopleSelector();
+    buildCurrentGroupGraph();
 
     document.getElementById("details").innerHTML =
         person + "'s data deleted.";
@@ -502,8 +612,13 @@ async function resetData(){
 
     await uploadDefaultData();
 
-    loadSocialFolders();
+    currentGroup = [];
+    selectedPerson = null;
+
     cy.elements().remove();
+
+    loadSocialFolders();
+    renderPeopleSelector();
 
     document.getElementById("details").innerHTML =
         "Default data loaded again.";
