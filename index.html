@@ -3,62 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Media Network</title>
+    <title>Social Network Graph</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
 </head>
 <body>
 
-<h1>My Social Media Network</h1>
+    <h1>Social Media Network</h1>
 
-<div class="controls">
-    <input id="mainPerson" placeholder="Main Person">
-
-    <textarea id="connectedPeople" placeholder="Connected People, separate names with comma"></textarea>
-
-    <button onclick="showGroupGraph()">Show Graph</button>
-    <button class="reset" onclick="resetData()">Reset Data</button>
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
-</div>
-
-<div class="controls">
-    <input id="mainPerson" placeholder="Main Person">
-
-    <textarea id="connectedPeople" placeholder="Connected People, separate names with comma"></textarea>
-
-    <button onclick="setPeopleGroup()">Set People</button>
-    <button class="reset" onclick="resetData()">Reset Data</button>
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
-</div>
-
-<div id="dataPanel" class="data-panel">
-    <h3 id="selectedPersonTitle">Select a person to add data</h3>
-
-    <input id="dataInput" placeholder="Add platform/data, example: Facebook">
-    <button onclick="addDataToSelectedPerson()">Add Data</button>
-
-    <div id="personDataList"></div>
-</div>
-
-<div id="sideMenu" class="side-menu">
-    <button class="close-btn" onclick="closeMenu()">✕</button>
-
-    <h3>Menu</h3>
-
-    <div class="folder social-main" onclick="toggleSocialFolder()">
-        <span>📁 Socials</span>
-        <span id="folderArrow">▶</span>
+    <div class="person-buttons">
+        <button onclick="selectPerson('Daniel')">Daniel</button>
+        <button onclick="selectPerson('Kelly')">Kelly</button>
+        <button onclick="selectPerson('April')">April</button>
+        <button onclick="selectPerson('Craig')">Craig</button>
+        <button onclick="selectPerson('Viel')">Viel</button>
     </div>
 
-    <div id="socialFolder" class="sub-folder"></div>
-</div>
+    <div class="controls">
+        <button onclick="findConnection()">Find Connection</button>
+    </div>
 
-<div class="main">
-    <div id="cy"></div>
-    <div id="details">Loading database...</div>
-</div>
+    <div class="main">
+        <div id="cy"></div>
+        <div id="details">Select a person, then click Find Connection.</div>
+    </div>
 
-<script type="module" src="script.js"></script>
+    <script src="script.js"></script>
 
 </body>
 </html>
